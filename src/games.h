@@ -14,6 +14,28 @@ static bool gBtnLeft = false, gBtnRight = false;
 static void drawGameOver(const char *title, int score, int best)
 {
   canvas->fillScreen(RGB565_BLACK);
+#ifdef WAVESHARE_175C
+  canvas->setTextSize(4);
+  canvas->setTextColor(rgb565(240, 80, 70));
+  canvas->setCursor(CX - (int)strlen(title) * 12, 130);
+  canvas->print(title);
+  char buf[24];
+  snprintf(buf, sizeof(buf), "SCORE %d", score);
+  canvas->setTextSize(4);
+  canvas->setTextColor(RGB565_WHITE);
+  canvas->setCursor(CX - (int)strlen(buf) * 12, 210);
+  canvas->print(buf);
+  snprintf(buf, sizeof(buf), "best %d", best);
+  canvas->setTextSize(3);
+  canvas->setTextColor(rgb565(150, 150, 150));
+  canvas->setCursor(CX - (int)strlen(buf) * 9, 300);
+  canvas->print(buf);
+  canvas->setTextColor(rgb565(255, 213, 48));
+  canvas->setCursor(CX - (int)strlen("pwr: replay") * 9, 350);
+  canvas->print("pwr: replay");
+  canvas->setCursor(CX - (int)strlen("boot: menu") * 9, 385);
+  canvas->print("boot: menu");
+#else
   canvas->setTextSize(3);
   canvas->setTextColor(rgb565(240, 80, 70));
   canvas->setCursor(CX - (int)strlen(title) * 9, 100);
@@ -34,6 +56,7 @@ static void drawGameOver(const char *title, int score, int best)
   canvas->print("right: replay");
   canvas->setCursor(CX - 72, 262);
   canvas->print("center: menu");
+#endif
 }
 
 // ---- Playable Snake: continuous steering (hold left/right to turn),
@@ -683,8 +706,13 @@ static void gameRunner(float dt)
 
 #define TT_RINGS 10
 #define TT_SECT 16
+#ifdef WAVESHARE_175C
+#define TT_R0 40.0f  // core radius (the "floor") -- scaled for the 466 screen
+#define TT_DR 18.0f  // thickness of one ring (10 rings -> outer 220 of 233)
+#else
 #define TT_R0 26.0f  // core radius (the "floor")
 #define TT_DR 14.0f  // thickness of one ring
+#endif
 
 // tetrominoes: offsets (dx = angular, dy = radial), rotated by (dx,dy)->(-dy,dx)
 static const int8_t TT_SHAPES[7][4][2] = {
@@ -874,12 +902,20 @@ static void gameTetro(float dt)
   snprintf(buf, sizeof(buf), "%d", tt.score);
   canvas->setTextSize(2);
   canvas->setTextColor(rgb565(200, 200, 200));
+#ifdef WAVESHARE_175C
+  canvas->setCursor(CX - (int)strlen(buf) * 12, CY - 22);
+#else
   canvas->setCursor(CX - (int)strlen(buf) * 6, CY - 16);
+#endif
   canvas->print(buf);
   for (int i = 0; i < 4; i++)
   {
     int dx = TT_SHAPES[tt.nextType][i][0], dy = TT_SHAPES[tt.nextType][i][1];
+#ifdef WAVESHARE_175C
+    canvas->fillRect(CX - 4 + dx * 7, CY + 12 - dy * 7, 6, 6, ttColor(1 + tt.nextType));
+#else
     canvas->fillRect(CX - 3 + dx * 5, CY + 8 - dy * 5, 4, 4, ttColor(1 + tt.nextType));
+#endif
   }
 }
 
