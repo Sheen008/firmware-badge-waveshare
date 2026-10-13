@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>badge setup</title>
+<style>
+  @font-face { font-family: 'DingosBlack'; font-display: swap;
+    src: url(data:font/opentype;base64,__DINGOS__) format('opentype'); }
+  @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 500;
+    font-display: swap;
+    src: url(data:font/woff2;base64,__INTER__) format('woff2'); }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { background:#0e120d; color:#fff;
+         font-family:'Inter',-apple-system,system-ui,sans-serif;
+         min-height:100vh; min-height:100dvh; display:flex; flex-direction:column;
+         align-items:center; padding:34px 26px 24px; overscroll-behavior:none; }
+  .dingos { font-family:'DingosBlack','Inter',sans-serif; font-weight:normal; }
+  h1 { font-size:22px; letter-spacing:2px; color:#fff; text-align:center;
+       margin-bottom:34px; }
+  #st { display:inline-block; width:8px; height:8px; border-radius:50%;
+        background:#f0504d; margin-right:10px; vertical-align:3px; }
+  #st.ok { background:#7cf59a; }
+  .card { display:none; flex-direction:column; width:min(100%,380px); flex:1; }
+  .card.on { display:flex; }
+  .lab { font-size:15px; letter-spacing:1px; color:#fff; margin:0 0 10px 4px; }
+  .lab.dim { color:#8f978f; }
+  .labrow { display:flex; justify-content:space-between; align-items:baseline;
+            margin-right:4px; }
+  .labrow .lab { margin-bottom:10px; }
+  .cnt { font-size:12px; color:#525b52; font-variant-numeric:tabular-nums; }
+  input[type=text], input[type=url] {
+    background:#161b15; color:#fff; border:1.5px solid #262c25;
+    border-radius:22px; padding:15px 20px; font-size:17px; width:100%;
+    outline:none; font-family:'Inter',sans-serif; margin-bottom:26px;
+    transition:border-color .15s; }
+  input::placeholder { color:#525b52; }
+  input:focus, input.filled { border-color:#fbd975; }
+  .hint { font-size:13px; line-height:1.55; color:#8f978f; margin:-14px 4px 24px; }
+  /* buddy step */
+  #prevWrap { display:flex; justify-content:center; margin-bottom:18px; }
+  #prev { width:120px; height:120px; }
+  input[type=range] { width:100%; height:26px; appearance:none;
+    background:transparent; margin-bottom:16px; }
+  input[type=range]::-webkit-slider-runnable-track { height:12px; border-radius:6px; }
+  #hue::-webkit-slider-runnable-track { background:linear-gradient(90deg,
+    #ff5f5f,#ffd75f,#7cf59a,#46d7f5,#6a7bff,#e06af5,#ff5f5f); }
+  #sat::-webkit-slider-runnable-track { background:linear-gradient(90deg,#8a8a8a,#ff3fd4); }
+  input[type=range]::-webkit-slider-thumb { appearance:none; width:22px; height:22px;
+    border-radius:50%; background:#fff; border:3px solid #0e120d; margin-top:-5px; }
+  #faces { display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
+           margin-bottom:12px; }
+  #faces button { background:#161b15; border:2px solid #262c25; border-radius:16px;
+                  padding:7px; cursor:pointer; }
+  #faces button.sel { border-color:#fbd975; }
+  #faces canvas { width:100%; display:block; }
+  .ghost { background:none; border:none; color:#8f978f; font-size:13px;
+           text-decoration:underline; cursor:pointer; align-self:center;
+           font-family:'Inter',sans-serif; }
+  /* navigation */
+  #nav { display:flex; gap:12px; justify-content:center; width:min(100%,380px);
+         margin:26px 0 30px; }
+  #nav button { border:none; cursor:pointer; border-radius:32px;
+                padding:17px 42px; font-size:17px; letter-spacing:1px; }
+  #back { background:#1b201a; color:#9aa39a; }
+  #next { background:#fff; color:#0e120d; }
+  #saved { font-size:12px; color:#7cf59a; height:15px; opacity:0;
+           transition:opacity .3s; align-self:center; }
+  #saved.show { opacity:1; }
+  #photoZone { display:flex; flex-direction:column; align-items:center; gap:12px;
+               margin-bottom:14px; }
+  #photoPrev { width:170px; height:170px; border-radius:50%; background:#161b15;
+               border:2px dashed #3a423a; object-fit:cover; display:block; }
+  #photoPrev.has { border-style:solid; border-color:#aaa6fc; }
+  #photoBtns { display:flex; gap:10px; }
+  #photoBtns button { background:#161b15; border:2px solid #262c25; color:#e8f0e8;
+    border-radius:12px; padding:10px 16px; font-size:14px; cursor:pointer; }
+  #photoBar { width:80%; height:8px; border-radius:4px; background:#1e1b33;
+              overflow:hidden; display:none; }
+  #photoBar div { height:100%; width:0; background:#aaa6fc; }
+  #steps { display:flex; gap:14px; align-items:center; justify-content:center; }
+  .dot { width:28px; height:28px; border-radius:50%; background:#1e1b33;
+         color:#8b86b8; display:flex; align-items:center; justify-content:center;
+         font-size:13px; cursor:pointer; }
+  .dot.on { background:#aaa6fc; color:#211c3b; }
+  .bar { width:22px; height:2px; background:#1e1b33; }
+</style>
+</head>
+<body>
+<h1 class="dingos"><span id="st"></span>BADGE SETUP</h1>
+
+<div class="card on" id="s0">
+  <span class="lab dingos">NAME</span>
+  <input type="text" id="name" maxlength="20" placeholder="Ada Lovelace" autocomplete="off">
+  <span class="lab dingos dim">COMPANY</span>
+  <input type="text" id="company" maxlength="24" placeholder="Apple" autocomplete="off">
+  <div class="labrow"><span class="lab dingos dim">MESSAGE</span>
+    <span class="cnt" id="msgcnt">0/20</span></div>
+  <input type="text" id="msg" maxlength="20" placeholder="Hi Buddy &#128075;" autocomplete="off">
+</div>
+
+<div class="card" id="s1">
+  <span class="lab dingos">YOUR CONF BUDDY</span>
+  <div id="prevWrap"><canvas id="prev" width="120" height="120"></canvas><script>{const c=document.getElementById("prev"),d=Math.min(3,window.devicePixelRatio||1);c.width=c.height=Math.round(120*d);}</script></div>
+  <span class="lab dingos dim">COLOR</span>
+  <input type="range" id="hue" min="0" max="359" value="0">
+  <span class="lab dingos dim">INTENSITY</span>
+  <input type="range" id="sat" min="35" max="130" value="100">
+  <span class="lab dingos dim">FACE</span>
+  <div id="faces"></div>
+  <button class="ghost" id="reset">use my default badge avatar instead</button>
+</div>
+
+<div class="card" id="s2">
+  <span class="lab dingos">YOUR PHOTO</span>
+  <div id="photoZone">
+    <canvas id="photoPrev" width="360" height="360"></canvas>
+    <div id="photoBtns">
+      <button id="photoPick" class="dingos">CHOOSE A PHOTO</button>
+      <button id="photoDel" class="dingos" style="display:none">REMOVE</button>
+    </div>
+    <div id="photoBar"><div></div></div>
+    <input type="file" id="photoFile" accept="image/*" style="display:none">
+  </div>
+  <p class="hint">Optional&nbsp;: a photo of you, shown full screen on the badge
+    (<b>Watch &gt; My Photo</b>). Center-cropped to a circle automatically.</p>
+</div>
+
+<div class="card" id="s3">
+  <span class="lab dingos">YOUR QR CODE</span>
+  <input type="url" id="url" maxlength="90" placeholder="https://your-site.dev"
+         autocapitalize="off" autocorrect="off">
+  <p class="hint">Where should your QR code send people? Your website, LinkedIn,
+    X&hellip; The badge shows it in <b>Meet &gt; QR Code</b>, with your buddy
+    animated in the middle.</p>
+</div>
+
+<span id="saved">saved on badge &#10003;</span>
+<div id="nav">
+  <button id="back" class="dingos">BACK</button>
+  <button id="next" class="dingos">NEXT</button>
+</div>
+<div id="steps">
+  <span class="dot on" data-s="0">1</span><span class="bar"></span>
+  <span class="dot" data-s="1">2</span><span class="bar"></span>
+  <span class="dot" data-s="2">3</span><span class="bar"></span>
+  <span class="dot" data-s="3">4</span>
+</div>
+
+<script>
+let step = 0, ws = null, hue = 0, sat = 100, face = 0, custom = 0;
+
+// ---- mini renders of the 9 faces (approximates the badge render) ----
+// --- badge sphere replicated (firmware dvdGenSprite): PAL_RAINBOW
+// palette, gaussian blend, vibrance, grain — 112 px master sprite kept in
+// cache, redrawn only when hue/saturation change
+const SPH_PAL = [[-0.65,-0.65,250,209,228],[-0.43,-0.65,248,229,157],[-0.22,-0.65,244,213,121],[0.00,-0.65,228,170,144],[0.22,-0.65,214,135,150],[0.43,-0.65,185,100,129],[-0.65,-0.43,251,225,208],[-0.43,-0.43,250,229,177],[-0.22,-0.43,236,197,99],[0.00,-0.43,217,160,69],[0.22,-0.43,202,140,54],[0.43,-0.43,166,99,48],[-0.65,-0.22,249,233,179],[-0.43,-0.22,245,219,152],[-0.22,-0.22,226,166,96],[0.00,-0.22,207,132,71],[0.22,-0.22,177,113,29],[0.43,-0.22,140,75,25],[-0.65,0.00,229,212,104],[-0.43,0.00,221,195,96],[-0.22,0.00,211,125,138],[0.00,0.00,187,86,127],[0.22,0.00,142,60,43],[0.43,0.00,109,41,46],[-0.65,0.22,206,194,82],[-0.43,0.22,190,178,80],[-0.22,0.22,186,110,159],[0.00,0.22,163,63,140],[0.22,0.22,120,39,85],[0.43,0.22,92,27,71],[-0.65,0.43,196,171,83],[-0.43,0.43,161,164,76],[-0.22,0.43,141,128,133],[0.00,0.43,135,53,139],[0.22,0.43,102,31,101],[0.43,0.43,97,30,107],[-0.65,0.65,178,99,142],[-0.43,0.65,133,136,66],[-0.22,0.65,100,113,121],[0.00,0.65,98,55,125],[0.22,0.65,103,35,117],[0.43,0.65,109,36,117],[0.850,0.000,93,95,61],[0.736,0.425,77,68,119],[0.425,0.736,117,40,132],[0.000,0.850,80,76,143],[-0.425,0.736,123,111,58],[-0.736,0.425,208,145,145],[-0.850,0.000,241,181,177],[-0.736,-0.425,251,214,202],[-0.425,-0.736,252,234,169],[0.000,-0.850,232,188,213],[0.425,-0.736,192,104,162],[0.736,-0.425,103,58,52],[-0.797,-0.460,250,204,211],[-0.920,0.000,240,166,218],[0.000,-0.920,233,188,223],[0.460,-0.797,184,97,168]];
+function sphRgb2hsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+  if (mx === mn) return [0, 0, l];
+  const d = mx - mn, s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+  let h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h / 6, s, l];
+}
+function sphHue1(p, q, t) {
+  if (t < 0) t += 1; if (t > 1) t -= 1;
+  if (t < 1/6) return p + (q - p) * 6 * t;
+  if (t < 1/2) return q;
+  if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+  return p;
+}
+function sphHsl2rgb(h, s, l) {
+  if (s === 0) { const v = l * 255; return [v, v, v]; }
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+  return [sphHue1(p, q, h + 1/3) * 255, sphHue1(p, q, h) * 255, sphHue1(p, q, h - 1/3) * 255];
+}
+let sphCv = null, sphKey = '';
+function sphMaster(hu, sa) {
+  const key = hu + '_' + sa;
+  if (sphCv && sphKey === key) return sphCv;
+  const M = 112;
+  if (!sphCv) { sphCv = document.createElement('canvas'); sphCv.width = sphCv.height = M; }
+  sphKey = key;
+  const P = SPH_PAL.map(p => {
+    let [px, py, r, g, b] = p;
+    if (hu || sa !== 100) {
+      const [h0, s0, l0] = sphRgb2hsl(r, g, b);
+      [r, g, b] = sphHsl2rgb((h0 + hu / 360 + 1) % 1,
+                             Math.min(1, Math.max(0, s0 * sa / 100)), l0);
+    }
+    const nz = 1 - px * px - py * py;
+    return [px, py, r, g, b, Math.sqrt(nz > 0 ? Math.sqrt(nz) : 0.5)];
+  });
+  const c2 = sphCv.getContext('2d');
+  const img = c2.createImageData(M, M), d = img.data, rr = M / 2 - 1;
+  for (let y = 0; y < M; y++) for (let x = 0; x < M; x++) {
+    const nx = (x - M / 2) / rr, ny = (y - M / 2) / rr;
+    if (nx * nx + ny * ny > 1) continue;
+    let tw = 0, pr = 0, pg = 0, pb = 0;
+    for (const p of P) {
+      const dx = nx - p[0], dy = ny - p[1], d2 = dx * dx + dy * dy;
+      if (d2 > 0.3025) continue;
+      const w = Math.exp(-d2 / 0.0512) * p[5];
+      tw += w; pr += p[2] * w; pg += p[3] * w; pb += p[4] * w;
+    }
+    if (tw > 1e-6) {
+      pr /= tw; pg /= tw; pb /= tw;
+      const lum = 0.299 * pr + 0.587 * pg + 0.114 * pb;
+      pr = (lum + (pr - lum) * 1.75) * 1.12;
+      pg = (lum + (pg - lum) * 1.75) * 1.12;
+      pb = (lum + (pb - lum) * 1.75) * 1.12;
+    }
+    const gr = ((Math.imul(x * 374761393 + y * 668265263, 1274126177) >>> 15) % 41) - 20;
+    const i = (y * M + x) * 4;
+    d[i] = Math.max(0, Math.min(255, pr + gr));
+    d[i + 1] = Math.max(0, Math.min(255, pg + gr));
+    d[i + 2] = Math.max(0, Math.min(255, pb + gr));
+    d[i + 3] = 255;
+  }
+  c2.putImageData(img, 0, 0);
+  return sphCv;
+}
+function drawFace(ctx, s, id, hu, sa) {
+  ctx.clearRect(0, 0, s, s);
+  { const R = s*0.46; ctx.imageSmoothingEnabled = false; // crisp pixels (badge)
+    ctx.drawImage(sphMaster(hu, sa), s/2-R, s/2-R, R*2, R*2);
+    ctx.imageSmoothingEnabled = true; }
+  // ---- face: EXACT port of avatarDrawFace (src/avatars.h), front view
+  // (cosT=1, openness=1) — same Figma dimensions, same strokes
+  const fr = s * 0.46, cx = s / 2, cy = s / 2, ink = '#272727';
+  ctx.fillStyle = ink; ctx.strokeStyle = ink;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const P = (nx, ny) => {
+    const nz2 = 1 - nx * nx - ny * ny, nz = nz2 > 0 ? Math.sqrt(nz2) : 0.1;
+    return [cx + nx * fr, Math.max(0.3, nz)];
+  };
+  const Y = (ny) => cy + ny * fr;
+  const eye = (nx, ny, rx, ry) => { const [x, sc] = P(nx, ny);
+    ctx.beginPath(); ctx.ellipse(x, Y(ny), rx * fr * sc, ry * fr, 0, 0, 7); ctx.fill(); };
+  const stroke = (mode, x0, w, yb, amp, r) => {
+    const n = Math.max(8, Math.floor(w / (r * 0.5)) + 4);
+    for (let i = 0; i <= n; i++) {
+      const u = i / n; let y = yb;
+      if (mode === 0) y = yb + amp * (0.25 - (u - 0.5) ** 2) * 4;
+      else if (mode === 1) y = yb + amp * Math.sin(u * 3 * Math.PI);
+      else if (mode === 2) y = yb + amp * Math.abs(Math.sin(u * 2 * Math.PI));
+      else if (mode === 3) y = yb - amp * Math.sin(u * Math.PI);
+      else if (mode === 4) y = yb - amp * u + amp * 0.5 * (0.25 - (u - 0.5) ** 2) * 4;
+      ctx.beginPath(); ctx.arc(x0 + u * w, y, r, 0, 7); ctx.fill();
+    }
+  };
+  const star = (x, y, R) => {
+    ctx.beginPath(); ctx.arc(x, y, R * 0.72, 0, 7); ctx.fill();
+    for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4;
+      ctx.beginPath();
+      ctx.arc(x + Math.cos(a) * R * 0.68, y + Math.sin(a) * R * 0.68, R * 0.36, 0, 7);
+      ctx.fill(); }
+  };
+  switch (id) {
+  case 0: { // muzzle (original character): firmware SVG path (viewBox 71x73)
+    eye(-0.381, -0.210, 0.099, 0.099); eye(0.381, -0.210, 0.099, 0.099);
+    const [mx, scm] = P(0, 0.074), my = Y(0.074);
+    const w = 0.316 * fr * scm, h = 0.342 * fr;
+    ctx.save(); ctx.translate(mx - w / 2, my - h / 2); ctx.scale(w / 71, h / 73);
+    ctx.fill(new Path2D('M12.8717 29.0658C0.183 19.6626 6.83373 -0.481934 22.6268 -0.481934H51.1003C66.7113 -0.481934 73.4774 19.2799 61.1424 28.8482L48.6013 38.5763C45.7282 40.805 42.1954 42.0146 38.5592 42.0146H35.7539C32.241 42.0146 28.8211 40.8855 25.9988 38.7939Z'));
+    ctx.lineWidth = 12.2881;
+    ctx.stroke(new Path2D('M32.1099 34.3398C37.0394 44.1075 36.3352 71.3541 7.81445 65.1851'));
+    ctx.stroke(new Path2D('M38.8256 34.3398C33.8961 44.1075 34.6003 71.3541 63.1211 65.1851'));
+    ctx.restore(); break; }
+  case 1: { // laugh: SVG paths from Mouth_visage2.svg (73x59), as on badge
+    eye(-0.465, -0.215, 0.095, 0.095); eye(0.465, -0.215, 0.095, 0.095);
+    const [mx, scm] = P(0, 0.085), my = Y(0.085);
+    const w = 0.485 * fr * scm, h = 0.392 * fr;
+    ctx.save(); ctx.translate(mx - w / 2, my - h / 2); ctx.scale(w / 73, h / 59);
+    ctx.fill(new Path2D('M34.7607 5.49146C27.8109 5.50955 20.212 4.00743 13.9419 2.34413C7.58008 0.656501 0.862811 5.53642 1.41466 12.0951C3.45424 36.335 9.38839 61.0545 38.1324 58.2857C67.812 55.4268 72.9704 33.2371 72.1404 9.20926C71.9349 3.26263 65.812 -0.567272 60.0948 1.08149C52.7209 3.20802 42.9625 5.47012 34.7607 5.49146Z'));
+    ctx.fillStyle = '#fff';
+    ctx.fill(new Path2D('M38.2526 56.2221C57.4991 54.998 65.3174 43.6002 66.9171 34.5579C44.6629 27.8063 18.5998 32.2446 7.56836 35.5361C11.2605 47.3106 19.006 57.4462 38.2526 56.2221Z'));
+    ctx.restore(); ctx.fillStyle = ink; break; }
+  case 2: { // thin little smile
+    eye(-0.431, -0.213, 0.084, 0.084); eye(0.431, -0.213, 0.084, 0.084);
+    const [mx, scm] = P(0, -0.032), w = 0.380 * fr * scm;
+    stroke(0, mx - w / 2, w, Y(-0.038) - 0.010 * fr, 0.025 * fr, 0.026 * fr); break; }
+  case 3: { // small wave
+    eye(-0.431, -0.194, 0.103, 0.103); eye(0.431, -0.194, 0.103, 0.103);
+    const [mx, scm] = P(0, 0.035), w = 0.440 * fr * scm;
+    stroke(1, mx - w / 2, w, Y(0.032), 0.018 * fr, 0.028 * fr); break; }
+  case 4: { // cat: oval eyes + omega
+    eye(-0.316, -0.204, 0.075, 0.094); eye(0.316, -0.204, 0.075, 0.094);
+    const [mx, scm] = P(0, 0.150), w = 0.580 * fr * scm;
+    stroke(2, mx - w / 2, w, Y(0.100), 0.105 * fr, 0.035 * fr); break; }
+  case 5: { // sunglasses: bar + lenses + smirk
+    const [exl, scl] = P(-0.200, -0.213), [exr, scr] = P(0.200, -0.213);
+    const [mxx, scm] = P(0.184, 0.058);
+    const barTop = Y(-0.297), barH = 0.065 * fr;
+    const lensHalf = 0.174 * fr, lensDrop = 0.103 * fr;
+    const xL = exl - lensHalf * scl, xR = exr + lensHalf * scr;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(xL, barTop, xR - xL, barH, barH * 0.3);
+    else ctx.rect(xL, barTop, xR - xL, barH);
+    ctx.fill();
+    for (let sdx = 0; sdx < 2; sdx++) {
+      const c = sdx ? exr : exl, sc = sdx ? scr : scl, hw = lensHalf * sc;
+      ctx.fillRect(c - hw, barTop + barH - 1, 2 * hw, lensDrop * 0.5);
+      ctx.beginPath();
+      ctx.ellipse(c, barTop + barH + lensDrop * 0.5, hw, lensDrop * 0.5, 0, 0, 7);
+      ctx.fill();
+    }
+    const w = 0.330 * fr * scm;
+    stroke(4, mxx - w / 2, w, Y(0.058) + 0.045 * fr, 0.090 * fr, 0.030 * fr); break; }
+  case 6: { // big closed eyes ^^ + little smile
+    const [exl, scl] = P(-0.271, -0.184), [exr, scr] = P(0.271, -0.184);
+    const aw = 0.297 * fr, amp = 0.050 * fr, base = Y(-0.159);
+    stroke(3, exl - aw * scl / 2, aw * scl, base, amp, 0.030 * fr);
+    stroke(3, exr - aw * scr / 2, aw * scr, base, amp, 0.030 * fr);
+    const [mxx, scm] = P(0.090, 0.178), w = 0.323 * fr * scm;
+    stroke(0, mxx - w / 2, w, Y(0.178) - 0.012 * fr, 0.043 * fr, 0.027 * fr); break; }
+  case 7: { // big wavy mustache
+    eye(-0.342, -0.168, 0.084, 0.084); eye(0.342, -0.168, 0.084, 0.084);
+    const [mx, scm] = P(0, 0.103), w = 0.826 * fr * scm;
+    stroke(1, mx - w / 2, w, Y(0.103), 0.033 * fr, 0.035 * fr); break; }
+  case 8: { // star eyes joined by a bar + little smile
+    const [exl, scl] = P(-0.248, -0.129), [exr, scr] = P(0.248, -0.129);
+    const ey = Y(-0.129), R = 0.142 * fr;
+    ctx.fillRect(exl, ey - 0.035 * fr, exr - exl, 0.070 * fr);
+    star(exl, ey, R * (0.7 + 0.3 * scl));
+    star(exr, ey, R * (0.7 + 0.3 * scr));
+    const [mxx, scm] = P(0.052, 0.168), w = 0.374 * fr * scm;
+    stroke(0, mxx - w / 2, w, Y(0.168) - 0.010 * fr, 0.035 * fr, 0.027 * fr); break; }
+  }
+}
+const faces = document.getElementById('faces');
+for (let i = 0; i < 9; i++) {
+  const b = document.createElement('button');
+  const c = document.createElement('canvas');
+  const dprF = Math.min(3, window.devicePixelRatio || 1);
+  c.width = c.height = Math.round(64 * dprF); // CSS size: width:100% (grid)
+  b.appendChild(c);
+  b.onclick = () => { face = i; custom = 1; sync(); sendBuddy(); };
+  faces.appendChild(b);
+}
+function sync() {
+  document.querySelectorAll('#faces button').forEach((b, i) =>
+    b.classList.toggle('sel', i === face));
+  document.querySelectorAll('#faces canvas').forEach((c, i) =>
+    drawFace(c.getContext('2d'), c.width, i, hue, sat));
+  drawFace(document.getElementById('prev').getContext('2d'),
+           document.getElementById('prev').width, face, hue, sat);
+  document.getElementById('hue').value = hue;
+  document.getElementById('sat').value = sat;
+}
+// yellow border on filled fields (as in the mockup)
+document.querySelectorAll('input[type=text],input[type=url]').forEach(i =>
+  i.addEventListener('input', () => i.classList.toggle('filled', !!i.value)));
+
+// ---- navigation ----
+function showStep(n) {
+  step = Math.max(0, Math.min(3, n));
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('s' + i).classList.toggle('on', i === step);
+    document.querySelector('[data-s="' + i + '"]').classList.toggle('on', i === step);
+  }
+  document.getElementById('back').style.visibility = step ? 'visible' : 'hidden';
+  document.getElementById('next').textContent = step === 3 ? 'DONE' : 'NEXT';
+  // the badge follows the step: on the QR step it shows the QR code live
+  if (ws && ws.readyState === 1) ws.send('S' + step);
+}
+document.getElementById('back').onclick = () => showStep(step - 1);
+document.getElementById('next').onclick = () => {
+  if (step === 3) { flashSaved(); showStep(0); } else showStep(step + 1);
+};
+document.querySelectorAll('.dot').forEach(d => d.onclick = () => showStep(+d.dataset.s));
+
+// ---- photo step: centered 360x360 crop on the phone side, WS upload ----
+const phPrev = document.getElementById('photoPrev'), phCtx = phPrev.getContext('2d');
+const phFile = document.getElementById('photoFile');
+const phBar = document.getElementById('photoBar');
+let phPixels = null;   // Uint16Array 360*360 (RGB565) ready to send
+let phSending = false, phOffset = 0, phOnDone = null;
+document.getElementById('photoPick').onclick = () => phFile.click();
+phFile.onchange = async () => {
+  const f = phFile.files && phFile.files[0];
+  if (!f) return;
+  const bmp = await createImageBitmap(f);
+  const side = Math.min(bmp.width, bmp.height);
+  phCtx.clearRect(0, 0, 360, 360);
+  phCtx.save();
+  phCtx.beginPath(); phCtx.arc(180, 180, 180, 0, 7); phCtx.clip();
+  phCtx.drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2,
+                  side, side, 0, 0, 360, 360);
+  phCtx.restore();
+  phPrev.classList.add('has');
+  document.getElementById('photoDel').style.display = '';
+  const d = phCtx.getImageData(0, 0, 360, 360).data;
+  phPixels = new Uint16Array(360 * 360);
+  for (let i = 0, j = 0; i < phPixels.length; i++, j += 4)
+    phPixels[i] = ((d[j] >> 3) << 11) | ((d[j + 1] >> 2) << 5) | (d[j + 2] >> 3);
+  phSendStart();
+};
+document.getElementById('photoDel').onclick = () => {
+  phPixels = null; phSending = false;
+  phCtx.clearRect(0, 0, 360, 360);
+  phPrev.classList.remove('has');
+  document.getElementById('photoDel').style.display = 'none';
+  if (ws && ws.readyState === 1) ws.send('X');
+};
+const PH_CHUNK = 8192; // bytes per frame, acknowledged by PACK
+function phSendStart() {
+  if (!phPixels || !ws || ws.readyState !== 1 || phSending) return;
+  phSending = true; phOffset = 0;
+  phBar.style.display = 'block'; phBar.firstElementChild.style.width = '0';
+  ws.send('P' + (phPixels.length * 2)); // badge replies PACK, then we continue
+}
+function phSendNext() {
+  if (!phSending || !phPixels) return;
+  const bytes = new Uint8Array(phPixels.buffer);
+  if (phOffset >= bytes.length) return;
+  const end = Math.min(phOffset + PH_CHUNK, bytes.length);
+  ws.send(bytes.slice(phOffset, end));
+  phOffset = end;
+  phBar.firstElementChild.style.width = (phOffset * 100 / bytes.length) + '%';
+}
+function phWsMessage(txt) { // badge replies for the upload
+  if (txt === 'PACK') { phSendNext(); return true; }
+  if (txt === 'POK') {
+    phSending = false;
+    phBar.firstElementChild.style.width = '100%';
+    setTimeout(() => { phBar.style.display = 'none'; }, 600);
+    flashSaved();
+    return true;
+  }
+  if (txt === 'PERR') {
+    phSending = false; phBar.style.display = 'none';
+    alert('Photo upload failed, please retry.');
+    return true;
+  }
+  if (txt === 'XOK') return true;
+  return false;
+}
+
+// ---- badge link ----
+function connect() {
+  try { ws = new WebSocket('ws://' + location.hostname + ':81/'); }
+  catch (_) { return; } // off-badge (file://...): the page stays usable
+  ws.onopen = () => { document.getElementById('st').classList.add('ok');
+                      ws.send('S' + step); };
+  ws.onclose = () => { document.getElementById('st').classList.remove('ok');
+                       setTimeout(connect, 1500); };
+  ws.onerror = () => ws.close();
+  ws.onmessage = (e) => {
+    if (typeof e.data === 'string' && phWsMessage(e.data)) return;
+    if (e.data[0] !== 'J') return;
+    try {
+      const j = JSON.parse(e.data.slice(1));
+      const set = (id, v) => { const el = document.getElementById(id);
+        el.value = v || ''; el.classList.toggle('filled', !!v); };
+      set('name', j.name); set('company', j.comp); set('msg', j.msg);
+      set('url', j.url);
+      updCnt();
+      hue = j.hue || 0; sat = j.sat || 100; face = j.face || 0; custom = j.cust || 0;
+      sync();
+    } catch (_) {}
+  };
+}
+connect();
+let savedT = null;
+function flashSaved() {
+  const el = document.getElementById('saved');
+  el.classList.add('show');
+  clearTimeout(savedT);
+  savedT = setTimeout(() => el.classList.remove('show'), 1400);
+}
+function send(msg) {
+  if (ws && ws.readyState === 1) { ws.send(msg); flashSaved(); }
+}
+const debs = {};
+function debounced(key, ms, fn) {
+  clearTimeout(debs[key]);
+  debs[key] = setTimeout(fn, ms);
+}
+document.getElementById('name').oninput = (e) =>
+  debounced('n', 350, () => send('N' + e.target.value.trim()));
+document.getElementById('company').oninput = (e) =>
+  debounced('c', 350, () => send('C' + e.target.value.trim()));
+function updCnt() {
+  const v = document.getElementById('msg').value;
+  document.getElementById('msgcnt').textContent = v.length + '/20';
+}
+document.getElementById('msg').oninput = (e) => {
+  updCnt();
+  debounced('m', 350, () => send('M' + e.target.value.trim()));
+};
+document.getElementById('url').oninput = (e) => {
+  const v = e.target.value.trim();
+  // incomplete URL -> the badge shows an "under construction" QR
+  if (v.length >= 4 && v.includes('.'))
+    debounced('u', 500, () => send('U' + v));
+  else if (ws && ws.readyState === 1)
+    ws.send('B');
+};
+function sendBuddy() {
+  debounced('a', 120, () => send('A' + hue + ',' + sat + ',' + face));
+}
+document.getElementById('hue').oninput = (e) => { hue = +e.target.value; custom = 1;
+                                                  sync(); sendBuddy(); };
+document.getElementById('sat').oninput = (e) => { sat = +e.target.value; custom = 1;
+                                                  sync(); sendBuddy(); };
+document.getElementById('reset').onclick = () => { custom = 0; send('R'); };
+sync(); showStep(0);
+</script>
+</body>
+</html>
