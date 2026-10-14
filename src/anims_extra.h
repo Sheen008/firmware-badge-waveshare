@@ -5,8 +5,6 @@
 #pragma once
 #include <string.h>
 #include "tc_logo.h"
-#include "speaker_photo.h"
-#include "speaker_photo3.h"
 
 // ---------------------------------------------------- CRT / color helpers
 
@@ -984,64 +982,7 @@ static void animPoints(float t)
   }
 }
 
-// ---------------------------------------------------------- speaker photo
-
-// Full-screen avatar: direct copy from the flash array to the framebuffer.
-static void animPhoto(float)
-{
-  memcpy(canvas->getFramebuffer(), SPEAKER_PHOTO, (size_t)W * H * 2);
-}
-
-// Second avatar (color photo test), static like animPhoto.
-static void animPhoto3(float)
-{
-  memcpy(canvas->getFramebuffer(), SPEAKER_PHOTO3, (size_t)W * H * 2);
-}
-
-// Variante CRT : zoom respirant, barre de balayage lumineuse, scanlines.
-static void animPhoto2(float t)
-{
-  uint16_t *fb = canvas->getFramebuffer();
-
-  // zoom 1.00..1.05 (inward only: never samples outside the image),
-  // nearest resampling in 16.16 fixed point
-  float s = 1.025f + 0.025f * sinf(t * 0.9f);
-  uint32_t inv = (uint32_t)(65536.0f / s);
-  for (int y = 0; y < H; y++)
-  {
-    uint32_t v = (uint32_t)((CY << 16) + (int32_t)((int64_t)(y - CY) * (int32_t)inv));
-    const uint16_t *src = &SPEAKER_PHOTO[(v >> 16) * W];
-    uint16_t *row = &fb[y * W];
-    uint32_t u = (uint32_t)((CX << 16) - (int32_t)((int64_t)CX * (int32_t)inv));
-    for (int x = 0; x < W; x++, u += inv)
-      row[x] = src[u >> 16];
-  }
-
-  // CRT sweep bar: bright band scrolling down (period ~8.7 s)
-  float yb = fmodf(t * 55.0f, (float)(H + 120)) - 60.0f;
-  for (int dyy = -18; dyy <= 18; dyy++)
-  {
-    int y = (int)yb + dyy;
-    if (y < 0 || y >= H)
-      continue;
-    int g16 = 16 + (int)(6.0f * (1.0f - (float)abs(dyy) / 18.0f)); // gain x1..x1.37
-    uint16_t *row = &fb[y * W];
-    for (int x = 0; x < W; x++)
-    {
-      uint16_t c = row[x];
-      int r = (((c >> 11) & 31) * g16) >> 4;
-      int g = (((c >> 5) & 63) * g16) >> 4;
-      int b = ((c & 31) * g16) >> 4;
-      row[x] = ((r > 31 ? 31 : r) << 11) | ((g > 63 ? 63 : g) << 5) | (b > 31 ? 31 : b);
-    }
-  }
-
-  // scanlines (1 row out of 3)
-  for (int y = 0; y < H; y += 3)
-    dimRow(y, 0, W);
-}
-
-// ------------------------------------------------ 14. warp (hyperespace)
+// ------------------------------------------------ 11. warp (hyperespace)
 // Port of drawWarp (screen-anims.js): radial shooting stars with trails,
 // speed pulses, character sphere beating at the center. Colors and
 // constants come from the JS; the canvas alpha is replaced by RGB scaling
@@ -1126,7 +1067,7 @@ static void animWarp(float t, float dt)
   drawIdleFace(CX, CY, br, t);
 }
 
-// -------------------------------------------- 15. solar system (planets)
+// -------------------------------------------- 12. solar system (planets)
 // Port of drawSolar (screen-anims.js): sun = rainbow character sphere,
 // 3 planets (sunset/acid/bubblegum palettes from the DVD sprites) on
 // elliptical orbits seen at an angle (SQ=0.42), twinkling stars, point

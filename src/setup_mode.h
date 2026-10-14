@@ -107,7 +107,7 @@ static void setupDrawScreen()
   char wifiQr[80];
   snprintf(wifiQr, sizeof(wifiQr), "WIFI:T:WPA;S:%s;P:%s;;", badgeSsid(),
            OTA_PASS);
-  qrMiniDraw(CX, 201, 140, wifiQr);
+  qrMiniDraw(CX, 150, 140, wifiQr);
   canvas->setTextSize(2);
   canvas->setTextColor(RGB565_WHITE);
   char line[40];
@@ -212,7 +212,7 @@ static void setupCopyStr(char *dst, size_t cap, const uint8_t *src, size_t len)
 }
 
 // name/company variant: transliterates Latin accents to ASCII
-// (the badge's Dingos/Bebas fonts cover 32..126)
+// (the badge's Bricolage Grotesque/Bebas fonts cover 32..126)
 static void setupCopyAscii(char *dst, size_t cap, const uint8_t *src, size_t len)
 {
   static const char *FOLD = // Latin-1 0xC0..0xFF

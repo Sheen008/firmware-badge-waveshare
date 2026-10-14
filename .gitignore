@@ -1,6 +1,12 @@
 # PlatformIO build
 .pio/
 
+# PlatformIO toolchain package cache (accidentally committed once; huge)
+_pkgs/
+
+# Local-only PlatformIO overrides (machine-specific toolchain symlinks)
+platformio.local.ini
+
 # Generated WASM emulator (rebuild: tools/emulator/build.sh)
 tools/emulator/emu.js
 

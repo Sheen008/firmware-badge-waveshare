@@ -8,7 +8,7 @@
 // mdPrint/mdTextW, sinf/cosf/fmodf, free.
 #pragma once
 #include "qrcodegen.h"
-#include "emoji_text.h" // card message pill: Dingos Medium + emojis
+#include "emoji_text.h" // card message pill: Bricolage Grotesque Medium + emojis
 
 #define QR_URL_MAX 96
 #define QR_NAME_MAX 24
@@ -98,7 +98,7 @@ static void qrScreenRelease()
 }
 
 // Badge identity card (Figma design): animated buddy + white message pill
-// overlapping the sphere + NAME in Dingos title + company in Bebas.
+// overlapping the sphere + NAME in Bricolage Grotesque title + company in Bebas.
 // Used by the Setup preview (and later the social screen). Also depends
 // on mtPrint/mtTextW and bbPrint/bbTextW (include beforehand).
 static void qrBuddyAnim(float cx, float cy, float fr, float t,

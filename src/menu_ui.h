@@ -8,7 +8,7 @@
 //   fitted to the label (animated position/width/color).
 //
 // Depends on: canvas, rgb565, RGB565_BLACK/WHITE, W/H/CX/CY, millis(),
-// mfPrint/mfTextW (Dingos ExtraBold), mdPrint (Dingos Medium), expf/sqrtf,
+// mfPrint/mfTextW (Bricolage Grotesque ExtraBold), mdPrint (Bricolage Grotesque Medium), expf/sqrtf,
 // constrain, snprintf.
 #pragma once
 
@@ -322,7 +322,7 @@ static void uiDrawBlog(uint32_t now, int curPct, uint32_t curMv)
       bbPrint(CX - bbTextW(buf) / 2, 329, buf, rgb565(0xfb, 0xd9, 0x75));
     }
   }
-  mdPrint(CX - mdTextW("left: reset   center: back") / 2, 361,
+  mdPrint(CX - mdTextW("left: reset   center: back") / 2, 370,
           "left: reset   center: back", rgb565(130, 130, 130));
 }
 
@@ -401,7 +401,7 @@ static void uiDrawProx(int level, float liveRssi)
 static void uiDrawMet(int scroll)
 {
   canvas->fillScreen(RGB565_BLACK);
-  // title in Dingos menu font (narrower) and lowered: as mtPrint at y=26
+  // title in Bricolage Grotesque menu font (narrower) and lowered: as mtPrint at y=26
   // it overflowed the visible round area (review 2026-08-29 (Romain))
   mfPrint(CX - mfTextW("ENCOUNTERS") / 2, 99, "ENCOUNTERS",
           rgb565(0x9d, 0x97, 0xed));
@@ -456,7 +456,7 @@ static void uiDrawMet(int scroll)
 static void uiDrawLB(int game, const uint16_t *mine)
 {
   canvas->fillScreen(RGB565_BLACK);
-  // title in Dingos menu font and lowered (same reason as ENCOUNTERS)
+  // title in Bricolage Grotesque menu font and lowered (same reason as ENCOUNTERS)
   mfPrint(CX - mfTextW("LEADERBOARD") / 2, 99, "LEADERBOARD",
           rgb565(0x9d, 0x97, 0xed));
   char sub[24];
@@ -552,11 +552,11 @@ static void uiDrawPin(const uint8_t *digits, int pos, bool error)
   canvas->fillScreen(RGB565_BLACK);
   uint16_t accent = rgb565(0xfb, 0xd9, 0x75);
   bbPrint(CX - bbTextW("SETTINGS") / 2, 131, "SETTINGS", RGB565_WHITE);
-  mdPrint(CX - mdTextW("enter code") / 2, 165, "enter code",
+  mdPrint(CX - mdTextW("enter code") / 2, 175, "enter code",
           rgb565(130, 140, 130));
   const int bw = 42, bh = 56, gap = 9;
   const int x0 = CX - (UI_PIN_LEN * bw + (UI_PIN_LEN - 1) * gap) / 2;
-  const int by = 150;
+  const int by = 205;
   for (int i = 0; i < UI_PIN_LEN; i++)
   {
     int bx = x0 + i * (bw + gap);
@@ -789,7 +789,7 @@ static bool uiDrawHome(float dt, int batPct, bool batCharging)
 
 // --------------------------------------------------- Schedule screen
 // Figma design "Internal - Three.js Conference": DAY pill at the top,
-// event type + time slot in Bebas Neue, title in Dingos ExtraBold 30,
+// event type + time slot in Bebas Neue, title in Bricolage Grotesque ExtraBold 30,
 // NOW pill, left/right arrows at the bottom. Hardcoded sample data --
 // replaced by the real program once Romain provides it.
 struct UiEvent
@@ -818,7 +818,7 @@ static bool uiEventIsNow(const UiEvent &e)
 }
 // Official program -- source: Google Sheet "Three.js Conf Paris"
 // (Day 1/Day 2 tabs, snapshot of 2026-09-08). Lines split to fit 2 x
-// Dingos 30, internal logistics entries omitted.
+// Bricolage Grotesque 30, internal logistics entries omitted.
 static const UiEvent UI_EVENTS[] = {
     // ---- Day 1 - Thursday 10
     {1, "INFO", "09:00 - 10:00", "Doors open", "& coffee"},

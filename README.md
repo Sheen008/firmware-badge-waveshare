@@ -21,11 +21,28 @@ over ESP-NOW radio, and full configuration from the attendee's phone.
 - The 3D-printed enclosure and production plates live in the CAD repo
   [hervestudio/speaker-badges](https://github.com/hervestudio/speaker-badges)
 
+## Waveshare port (this repository)
+
+This repository is a port of the original firmware to the
+**Waveshare ESP32-S3-Touch-AMOLED-1.75C** — a 1.75" round AMOLED, 466×466:
+
+- **CO5300 QSPI** AMOLED (466×466), **CST9217** capacitive touch,
+  **AXP2101** PMIC
+- Native USB CDC for flashing and logs
+- The three wired buttons are replaced by touch + two keys: swipe / tap to
+  navigate, **PWR** = confirm, **BOOT** = back (long-press BOOT = power off).
+  See `CLAUDE.md` for the full input map.
+- Build: `pio run -e waveshare-175c -t upload`
+
+The original 360×360 GC9B72 badge remains supported through the
+`esp32-s3-devkitc-1` environment.
+
 ## Features
 
 - **Play**: Snake, Pong, Sphere Run, Roundtris (best scores in NVS)
 - **Watch**: Conf Buddy (animated avatar), Disco, Globe, DVD, Points, Warp,
-  Solar System…
+  Solar System, My Photo (your own picture uploaded from the phone — no
+  photo is preloaded in the firmware)
 - **Meet**: conference schedule, personal QR code, encounter history,
   fleet-wide leaderboard
 - **Social**: badges detect each other over ESP-NOW and share identity +
@@ -40,7 +57,8 @@ over ESP-NOW radio, and full configuration from the attendee's phone.
 Built with [PlatformIO](https://platformio.org/):
 
 ```
-pio run -e esp32-s3-devkitc-1 -t upload   # production badge (default)
+pio run -e waveshare-175c -t upload       # Waveshare 466×466 AMOLED (this port)
+pio run -e esp32-s3-devkitc-1 -t upload   # original 360×360 GC9B72 badge
 pio run -e ota -t upload                  # WiFi flash: badge in OTA mode
 pio run -e proto -t upload                # first prototype (legacy wiring)
 ```
@@ -74,5 +92,8 @@ hard-won pitfalls (power, radio, DMA, captive portal…).
 
 MIT — see [LICENSE](LICENSE). QR code generation uses the
 [Nayuki QR Code generator library](https://www.nayuki.io/page/qr-code-generator-library)
-(MIT). The embedded display fonts and the Dingos brand font remain the
-property of their respective owners.
+(MIT). The UI fonts are embedded as bitmap glyphs from
+[Bricolage Grotesque](https://github.com/ateliertriay/bricolage) (SIL OFL 1.1)
+and Bebas Neue (SIL OFL 1.1); their license texts are in
+[`licenses/`](licenses/). No speaker photo is preloaded — the badge only
+displays the picture its owner uploads through the phone Setup flow.

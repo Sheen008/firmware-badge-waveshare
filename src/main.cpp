@@ -148,7 +148,7 @@ static bool otaMode = false;
 #define CY 180
 #endif
 
-#define ANIM_COUNT 17
+#define ANIM_COUNT 14
 #define ANIM_DURATION_MS 15000
 #ifdef WAVESHARE_175C
 #define RADIUS 233 // usable radius of the round screen
@@ -1313,18 +1313,19 @@ static void resetIdle()
 
 // ---------------------- 6. three globe / 7. three conf (shared file) ----
 #include "anims_extra.h"
-#include "menu_font.h" // Dingos ExtraBold for the menu
-#include "menu_font_med.h" // Dingos Medium (battery percentage)
+#include "menu_font.h" // Bricolage Grotesque ExtraBold for the menu
+#include "menu_font_med.h" // Bricolage Grotesque Medium (battery percentage)
 #include "menu_font_bebas.h" // Bebas Neue (Schedule event types)
-#include "menu_font_title.h" // Dingos ExtraBold 30 (Schedule titles)
+#include "menu_font_title.h" // Bricolage Grotesque ExtraBold 30 (Schedule titles)
 
 // ------------------------------------------------------------------- menu
 
 // Active anims (the others stay available in the code) + display names.
-// Speaker photos (11..13) removed along with the Meet entries (review
-// 2026-08-29).
-static const uint8_t ACTIVE[] = {8, 4, 5, 6, 7, 9, 10, 14, 15, 16};
-// (16 = My Photo: hidden entry, slot skipped while g_hasPhoto is false)
+// Speaker photos (old slots 11..13) removed from the menu and the build:
+// no photo is preloaded -- "My Photo" (slot 13) shows the picture uploaded
+// via Setup, or a black screen when none is set.
+static const uint8_t ACTIVE[] = {8, 4, 5, 6, 7, 9, 10, 11, 12, 13};
+// (13 = My Photo: hidden entry, slot skipped while g_hasPhoto is false)
 static const int NACTIVE = (int)sizeof(ACTIVE);
 // (the menu tables live in menu_ui.h, shared with the emulator)
 
@@ -1517,7 +1518,7 @@ static void updateBattery(uint32_t now)
   }
 }
 
-// ---- Speaker photo uploaded via Setup (Watch > My Photo) ----
+// ---- My photo uploaded via Setup (Watch > My Photo) ----
 // Raw RGB565 360x360 in /photo.565 (LittleFS, spiffs partition 3.4 MB),
 // cropped/downscaled ON THE PHONE SIDE, loaded here into PSRAM at boot.
 static uint16_t *g_myPhoto = nullptr;
@@ -1608,7 +1609,7 @@ static void drawDrawWait()
   char wifiQr[80];
   snprintf(wifiQr, sizeof(wifiQr), "WIFI:T:WPA;S:%s;P:%s;;", badgeSsid(),
            OTA_PASS);
-  qrMiniDraw(CX, 201, 140, wifiQr);
+  qrMiniDraw(CX, 150, 140, wifiQr);
   canvas->setTextSize(2);
   canvas->setTextColor(RGB565_WHITE);
   char line[40];
@@ -2810,11 +2811,19 @@ void loop()
         break;
       }
     }
+    static int listLastPct = -999;
+    static bool listLastChg = false, listFirst = true;
+    // If the confirm above switched to a game / animation / settings screen,
+    // skip this frame: drawing uiDrawHome here would flash the bubble menu
+    // for one frame before the real screen takes over on the next pass.
+    if (uiMode != UI_MENU && uiMode != UI_HOME)
+    {
+      listFirst = true;
+      return;
+    }
     bool moving = (uiMode == UI_MENU)
                       ? uiDrawList(menuCat, menuSel, autoCycle, batPct, batCharging)
                       : uiDrawHome(dt, batPct, batCharging);
-    static int listLastPct = -999;
-    static bool listLastChg = false, listFirst = true;
     if (moving || navNext || navPrev || autoShort || listFirst ||
         batPct != listLastPct || batCharging != listLastChg)
     {
@@ -3054,14 +3063,14 @@ void loop()
   if (navNext)
   {
     slot = (slot + 1) % NACTIVE;
-    if (ACTIVE[slot] == 16 && !g_hasPhoto)
+    if (ACTIVE[slot] == 13 && !g_hasPhoto)
       slot = (slot + 1) % NACTIVE;
     slotStartMs = now;
   }
   if (navPrev)
   {
     slot = (slot + NACTIVE - 1) % NACTIVE;
-    if (ACTIVE[slot] == 16 && !g_hasPhoto)
+    if (ACTIVE[slot] == 13 && !g_hasPhoto)
       slot = (slot + NACTIVE - 1) % NACTIVE;
     slotStartMs = now;
   }
@@ -3074,7 +3083,7 @@ void loop()
   if (autoCycle && now - slotStartMs >= ANIM_DURATION_MS)
   {
     slot = (slot + 1) % NACTIVE;
-    if (ACTIVE[slot] == 16 && !g_hasPhoto)
+    if (ACTIVE[slot] == 13 && !g_hasPhoto)
       slot = (slot + 1) % NACTIVE;
     slotStartMs = now;
   }
@@ -3095,9 +3104,8 @@ void loop()
     resetIdle();
     static const char *names[ANIM_COUNT] = {"cube", "starfield", "plasma", "torus",
                                             "snake", "disco", "globe", "threeconf",
-                                            "idlerainbow", "dvd", "points", "photo",
-                                            "photo2", "photo3", "warp", "solar",
-                                            "myphoto"};
+                                            "idlerainbow", "dvd", "points", "warp",
+                                            "solar", "myphoto"};
     Serial0.printf("animation: %s\n", names[anim]);
   }
   float t = (now - animStartMs) / 1000.0f; // time local to the animation
@@ -3116,12 +3124,9 @@ void loop()
   case 8: animIdleRainbow(t); break;
   case 9: animDvd(t, dt); break;
   case 10: animPoints(t); break;
-  case 11: animPhoto(t); break;
-  case 12: animPhoto2(t); break;
-  case 13: animPhoto3(t); break;
-  case 14: animWarp(t, dt); break;
-  case 15: animSolar(t, dt); break;
-  case 16: animMyPhoto(t); break;
+  case 11: animWarp(t, dt); break;
+  case 12: animSolar(t, dt); break;
+  case 13: animMyPhoto(t); break;
   }
   if (anim == 8) // Conf Buddy: "a friend is here" reaction over the anim
     socialReactDraw(now);

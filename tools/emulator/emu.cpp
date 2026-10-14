@@ -1,7 +1,7 @@
 // Browser emulator of the threejs.paris badge (WebAssembly).
 //
 // Rendering uses the REAL firmware sources: src/anims_extra.h (all the
-// anims + speaker photos) and src/games.h + src/tama.h (the 5 games) are
+// anims) and src/games.h + src/tama.h (the 5 games) are
 // compiled as-is -- what you see here is what you will see on the ESP32.
 // The menu, the boot splash and the CRT power-off are COPIES of main.cpp
 // (resync them if you change those sections of the firmware).
@@ -64,15 +64,15 @@ static Preferences prefs;
 #endif
 
 // ------------------------------------------------- the firmware's games
-#include "menu_font.h" // Dingos ExtraBold for the menu
-#include "menu_font_med.h" // Dingos Medium (battery percentage)
+#include "menu_font.h" // Bricolage Grotesque ExtraBold for the menu
+#include "menu_font_med.h" // Bricolage Grotesque Medium (battery percentage)
 #include "menu_font_bebas.h"
 #include "menu_font_title.h"
 #include "games.h"
 
 // ---------------------------------------------- menu / UI (copy of main.cpp)
 #define ANIM_DURATION_MS 15000
-static const uint8_t ACTIVE[] = {8, 4, 5, 6, 7, 9, 10, 14, 15, 16};
+static const uint8_t ACTIVE[] = {8, 4, 5, 6, 7, 9, 10, 11, 12, 13};
 static const int NACTIVE = (int)sizeof(ACTIVE);
 // (menu tables: see menu_ui.h, shared with the firmware)
 
@@ -1153,14 +1153,14 @@ EMSCRIPTEN_KEEPALIVE void emu_frame(float dtMs, int held)
   if (navNext)
   {
     slot = (slot + 1) % NACTIVE;
-    if (ACTIVE[slot] == 16 && !g_hasPhoto)
+    if (ACTIVE[slot] == 13 && !g_hasPhoto)
       slot = (slot + 1) % NACTIVE;
     slotStartMs = now;
   }
   if (navPrev)
   {
     slot = (slot + NACTIVE - 1) % NACTIVE;
-    if (ACTIVE[slot] == 16 && !g_hasPhoto)
+    if (ACTIVE[slot] == 13 && !g_hasPhoto)
       slot = (slot + NACTIVE - 1) % NACTIVE;
     slotStartMs = now;
   }
@@ -1174,7 +1174,7 @@ EMSCRIPTEN_KEEPALIVE void emu_frame(float dtMs, int held)
   if (autoCycle && now - slotStartMs >= ANIM_DURATION_MS)
   {
     slot = (slot + 1) % NACTIVE;
-    if (ACTIVE[slot] == 16 && !g_hasPhoto)
+    if (ACTIVE[slot] == 13 && !g_hasPhoto)
       slot = (slot + 1) % NACTIVE;
     slotStartMs = now;
   }
@@ -1195,12 +1195,9 @@ EMSCRIPTEN_KEEPALIVE void emu_frame(float dtMs, int held)
   case 8: animIdleRainbow(t); break;
   case 9: animDvd(t, dt); break;
   case 10: animPoints(t); break;
-  case 11: animPhoto(t); break;
-  case 12: animPhoto2(t); break;
-  case 13: animPhoto3(t); break;
-  case 14: animWarp(t, dt); break;
-  case 15: animSolar(t, dt); break;
-  case 16: animMyPhoto(t); break;
+  case 11: animWarp(t, dt); break;
+  case 12: animSolar(t, dt); break;
+  case 13: animMyPhoto(t); break;
   }
   if (anim == 8) // Conf Buddy: "a friend is here" reaction over the anim
     socialReactDraw((uint32_t)emuNowMs);

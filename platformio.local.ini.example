@@ -1,0 +1,16 @@
+; Copy this file to platformio.local.ini (gitignored) to reuse an
+; already-downloaded ESP32 toolchain instead of re-downloading ~381 MB.
+; Replace <YOURUSER> with your Windows username (or use POSIX paths on
+; macOS/Linux). Delete the file to fall back to the default download.
+
+[env:esp32-s3-devkitc-1]
+platform_packages =
+    toolchain-xtensa-esp-elf@symlink://C:/Users/<YOURUSER>/.platformio/tools/toolchain-xtensa-esp-elf
+    toolchain-riscv32-esp@symlink://C:/Users/<YOURUSER>/.platformio/packages/toolchain-riscv32-esp
+    tool-mklittlefs@symlink://C:/Users/<YOURUSER>/.platformio/packages/tool-mklittlefs
+
+[env:waveshare-175c]
+platform_packages =
+    toolchain-xtensa-esp-elf@symlink://C:/Users/<YOURUSER>/.platformio/tools/toolchain-xtensa-esp-elf
+    toolchain-riscv32-esp@symlink://C:/Users/<YOURUSER>/.platformio/packages/toolchain-riscv32-esp
+    tool-mklittlefs@symlink://C:/Users/<YOURUSER>/.platformio/packages/tool-mklittlefs

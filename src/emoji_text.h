@@ -1,4 +1,4 @@
-// MIXED text rendering, Dingos Medium + bitmap emojis (emoji_font.h) -
+// MIXED text rendering, Bricolage Grotesque Medium + bitmap emojis (emoji_font.h) -
 // SHARED firmware / emulator. Text arrives as UTF-8 (Setup webapp):
 // ASCII runs go through mdPrint, known emojis are drawn as 18x18 bitmaps
 // (pre-blended on white: to be used on light backgrounds, the message
@@ -60,7 +60,7 @@ static int mxTextW(const char *s)
   return w + mdTextW(run);
 }
 
-// y = top of the Dingos Medium line (emojis are centered on it)
+// y = top of the Bricolage Grotesque Medium line (emojis are centered on it)
 static void mxPrint(int x, int y, const char *s, uint16_t col)
 {
   char run[64];
