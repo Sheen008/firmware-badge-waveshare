@@ -8,8 +8,6 @@ over ESP-NOW radio, and full configuration from the attendee's phone.
 **Try it in your browser** — the real firmware compiled to WebAssembly:
 **https://hervestudio.github.io/firmware-badge/**
 
-![Badge render](tools/emulator/badge3d.webp)
-
 ## Hardware
 
 - **ESP32-S3 N16R8** devkit — 16 MB QIO flash, 8 MB OPI PSRAM
